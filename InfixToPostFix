@@ -1,0 +1,87 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <stack>
+#include <unordered_map>
+
+using namespace std;
+
+string convertInfixToPostFix(string expression)
+{
+    auto isOperand = [](char ch) -> bool {return (ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');};
+    auto isOperator = [](char ch) -> bool {return (ch == '^' || ch == '*' || ch == '/' || ch == '+' || ch == '-');};
+    unordered_map<char, int> priority;
+    priority['^'] = 3;
+    priority['*'] = 2;
+    priority['/'] = 2;
+    priority['+'] = 1;
+    priority['-'] = 1;
+    priority['('] = 0;
+    
+    stack<char> st;
+    string answer;
+    expression = '(' + expression + ')';
+    try
+    {
+        for (auto symbol : expression)
+        {
+            if (isOperand(symbol))
+            {
+                answer += symbol;
+            }
+            else if (symbol == '(')
+            {
+                st.push(symbol);
+            }
+            else if (symbol == ')')
+            {
+                while (!st.empty() && st.top() != '(')
+                {
+                    answer += st.top();
+                    st.pop();
+                }
+                st.pop();
+            }
+            else if (isOperator(symbol))
+            {
+                if (st.empty())
+                {
+                    st.push(symbol);
+                }
+                else if (priority[symbol] > priority[st.top()])
+                {
+                    st.push(symbol);
+                }
+                else
+                {
+                    while (!st.empty() && priority[symbol] <= priority[st.top()])
+                    {
+                        answer += st.top();
+                        st.pop();
+                    }
+                    st.push(symbol);
+                }
+            }
+            else
+            {
+                throw runtime_error("Invalid expression");
+            }
+        }
+        if (!st.empty())
+        {
+            throw runtime_error("Invalid expression");
+        }
+    }
+    catch(const std::runtime_error& e)
+    {
+        cerr << "Exception: " << e.what() << std::endl;
+        answer = "";
+    }
+    return answer;
+}
+
+int main()
+{
+    string expression = "a+b*(c^d-e)^(f+g*h)-i";
+    cout << convertInfixToPostFix(expression) << endl;
+}
